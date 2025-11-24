@@ -1,37 +1,46 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Search Stock</title>
-<link rel="stylesheet" href="style.css">
-</head>
-<body>
+    <script src="script.js"></script>
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>
+            Search For a Stock
+        </title>
+        <link rel="stylesheet" href="style.css">
+    </head>
+    <body>
 
-<div class="sidebar">
-    <h2 class="logo">📊 Analyzer</h2>
-    <a href="index.html">Dashboard</a>
-    <a href="search.html" class="active">Search Stock</a>
-    <a href="watchlist.html">Watchlist</a>
-</div>
+        <div class="sidebar">
+            <h2 class="logo">
+                Stock Search
+            </h2>
+            <a href="index.html">Dashboard</a>
+            <a href="search.html" class="active">Search For a Stock</a>
+            <a href="watchlist.html">Stocks</a>
+        </div>
 
-<div class="main-content">
-    <h1>Search Stock</h1>
+        <div class="main-content">
+            <h1>Search For a Stock</h1>
 
-    <div class="search-box">
-        <input type="text" id="stockInput" placeholder="AAPL">
-        <button onclick="searchStock()">Search</button>
-    </div>
+            <div class="search-box">
+                <input type="text" id="stockInput" placeholder="AAPL">
+                <button id="SearchButton" onclick="searchStock()">Search</button>
+            </div>
 
-    <div class="result-box" id="stockResult">
-        <p>Type a symbol like <strong>AAPL</strong> and click Search.</p>
-    </div>
+            <br>
 
-    <div class="chart-box">
-        📈 Stock Trend Chart (Placeholder)
-    </div>
-</div>
+            <div class ="information-box">
+                <a href="https://stockanalysis.com/stocks/">Click here</a>
+                To see a full list of symbols to look for
+            </div>
 
-<script src="script.js"></script>
-</body>
+            <div class="result-box" id="stockResult">
+                <p>Input a stock's symbol like apple's AAPL and then click search</p>
+            </div>
+
+            <div class="chart-box">
+                View Stock Trend (Placeholder for now)
+            </div>
+        </div>
+    </body>
 </html>
