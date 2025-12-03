@@ -1,52 +1,49 @@
 <!DOCTYPE html>
 <html lang="en">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search For a Stock</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="sidebar">
+        <h2 class="logo">Stock Search</h2>
+        <a href="index.html">Dashboard</a>
+        <a href="search.html" class="active">Search For a Stock</a>
+        <a href="watchlist.html">Stocks</a>
+    </div>
+
+    <div class="main-content">
+        <h1>Search For a Stock</h1>
+
+        <div class="search-box">
+            <input type="text" id="stockInput" placeholder="AAPL">
+            <button id="SearchButton" onclick="searchStock()">Search</button>
+        </div>
+
+        <br>
+
+        <div class="information-box">
+            <a href="https://stockanalysis.com/stocks/" target="_blank">Click here</a>
+            to see a full list of symbols to look for
+
+            <!-- optional: button to add fake cash for demo -->
+            <button onclick="gainMoney()">Add $100</button>
+
+            <p class="seeMoney" id="seeMoney"></p>
+        </div>
+
+        <div class="result-box" id="stockResult">
+            <p>Input a stock's symbol like Apple's AAPL and then click search</p>
+        </div>
+
+        <div class="chart-box">
+            View Stock Trend (Placeholder for now)
+        </div>
+    </div>
+
+    <!-- Load JS LAST so DOM is ready -->
     <script src="script.js"></script>
-    <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>
-            Search For a Stock
-        </title>
-        <link rel="stylesheet" href="style.css">
-    </head>
-    <body>
-
-        <div class="sidebar">
-            <h2 class="logo">
-                Stock Search
-            </h2>
-            <a href="index.html">Dashboard</a>
-            <a href="search.html" class="active">Search For a Stock</a>
-            <a href="watchlist.html">Stocks</a>
-        </div>
-
-        <div class="main-content">
-            <h1>Search For a Stock</h1>
-
-            <div class="search-box">
-                <input type="text" id="stockInput" placeholder="AAPL">
-                <button id="SearchButton" onclick="searchStock()">Search</button>
-            </div>
-
-            <br>
-
-            <div class ="information-box">
-                <a href="https://stockanalysis.com/stocks/">Click here</a>
-                To see a full list of symbols to look for
-                <button onclick="gainMoney()"></button>
-                <p class="seeMoney" id="seeMoney">
-                    <script type="text/javascript">
-                        seeMoney();
-                    </script>
-                </p>
-            </div>
-
-            <div class="result-box" id="stockResult">
-                <p>Input a stock's symbol like apple's AAPL and then click search</p>
-            </div>
-
-            <div class="chart-box">
-                View Stock Trend (Placeholder for now)
-            </div>
-        </div>
-    </body>
+</body>
 </html>
