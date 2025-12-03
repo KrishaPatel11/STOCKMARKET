@@ -1,35 +1,67 @@
-// Fake Stock Data (Temporary)
-const fakeStocks = {
-    "AAPL": {
-        name: "AAPL (Apple Inc.)",
-        price: "$150.00",
-        high: "$153.00",
-        low: "$148.50",
-        volume: "210M"
-    },
-    "TSLA": {
-        name: "TSLA (Tesla Motors)",
-        price: "$720.00",
-        high: "$735.00",
-        low: "$700.00",
-        volume: "300M"
-    },
-    "AMZN": {
-        name: "AMZN (Amazon)",
-        price: "$3300.00",
-        high: "$3400.00",
-        low: "$3250.00",
-        volume: "120M"
+// ==============================
+// Backend Connection (User + Stocks)
+// ==============================
+
+// Will hold backend stock data like REAL_STOCKS["AAPL"] = {symbol, price, date}
+let REAL_STOCKS = {};
+
+let money = parseFloat(sessionStorage.getItem("money"));
+if (isNaN(money)) money = 100000;
+
+
+// Load user from backend
+async function getUserData() {
+    try {
+        const res = await fetch("http://127.0.0.1:5000/user/1");
+        const data = await res.json();
+        console.log("User Data:", data);
+
+        // Update name/cash ONLY if elements exist
+        const nameEl = document.getElementById("userName");
+        const cashEl = document.getElementById("userCash");
+
+        if (nameEl) nameEl.innerText = data.name;
+        if (cashEl) cashEl.innerText = "$" + data.cash.toFixed(2);
+
+        money = data.cash;
+        sessionStorage.setItem("money", money);
+        seeMoney();
+    } catch (error) {
+        console.error("Error loading user:", error);
     }
-};
-var money = parseFloat(sessionStorage.getItem("money")) || 1000.00;
-if (parseFloat(sessionStorage.getItem("money"))==0) {
-    money = 0.00;
 }
 
-const saved = [];
 
-var currentStock = "";
+// Load stocks from backend
+async function loadStocks() {
+    try {
+        const res = await fetch("http://127.0.0.1:5000/stocks");
+        const data = await res.json();
+        console.log("Loaded stocks:", data);
+
+        const stocks = data.stocks || [];
+        stocks.forEach(s => {
+            REAL_STOCKS[s.symbol.toUpperCase()] = s;
+        });
+    } catch (error) {
+        console.error("Error loading stock list:", error);
+    }
+}
+
+
+// App initializer
+async function initApp() {
+    await getUserData();
+    await loadStocks();
+    seeMoney();
+}
+
+document.addEventListener("DOMContentLoaded", initApp);
+
+
+// ==============================
+// Money Helpers
+// ==============================
 
 function gainMoney() {
     money += 100;
@@ -37,96 +69,191 @@ function gainMoney() {
     seeMoney();
 }
 
-// Search Function
-function searchStock() {
+function seeMoney() {
+    const box = document.getElementById("seeMoney");
+    if (!box) return;
+    box.innerHTML = `<p>Amount of money left: $${money.toFixed(2)}</p>`;
+    return box.innerHTML;
+}
+
+
+// ==============================
+// Stock Search + Buy + Save
+// ==============================
+
+let currentStock = null;
+
+// Search stock from backend data
+async function searchStock() {
     const input = document.getElementById("stockInput").value.toUpperCase();
     const resultDiv = document.getElementById("stockResult");
 
-    if (fakeStocks[input]) {
-        const stock = fakeStocks[input];
-        currentStock = stock;
-        var button = document.createElement("button");
-        button.setAttribute('onclick', 'saveStock()');
-        button.textContent = "Save Me";
-        button.id = "SaveButton";
+    const stock = REAL_STOCKS[input];
 
-        var buy = document.createElement("button");
-        buy.setAttribute('onclick', 'buyStock()');
-        buy.textContent = "Buy 1 Stock";
-        buy.id = "BuyButton";
-
+    if (!stock) {
         resultDiv.innerHTML = `
-            <h2>${stock.name}</h2>
-            <p><strong>Current Price:</strong> <span style="color: #20e060">${stock.price}</span></p>
-            <p>High: ${stock.high} | Low: ${stock.low} | Volume: ${stock.volume}</p>
+            <p style="color:red">Stock not found</p>
+            <a href="https://stockanalysis.com/stocks/" target="_blank">Click Here</a>
+            to see a list of stock symbols.
         `;
-        resultDiv.appendChild(button);
-        resultDiv.appendChild(buy);
-
-    } else {
-        resultDiv.innerHTML = `<p style="color:red"> Stock not found</p> <br> <a href="https://stockanalysis.com/stocks/">Click Here</a> to see a list of possible Stock Symbols to use`;
-    }
-}
-
-function buyStock() {
-    var stock = currentStock;
-    console.log(currentStock);
-    var price = parseFloat(stock.price.substring(1));
-    console.log("Money left: " + money + "\nPrice: " + price);
-
-    if (money<price) {
-        var buy = document.getElementById("BuyButton");
-        buy.textContent = "Not enough funds";
         return;
     }
 
-    var hold = JSON.parse(sessionStorage.getItem("bought")) || [];
-    console.log(hold);
+    currentStock = stock;
 
-    money = money-price;
+    resultDiv.innerHTML = `
+        <h2>${stock.symbol}</h2>
+        <p><strong>Current Price:</strong>
+            <span style="color:#20e060">$${Number(stock.price).toFixed(2)}</span>
+        </p>
+        <p>Date: ${stock.date || "N/A"}</p>
+        <button id="SaveButton" onclick="saveStock()">Save</button>
+        <button id="BuyButton" onclick="buyStock()">Buy 1 Stock</button>
+    `;
+}
+
+
+// Buy 1 share of current stock
+function buyStock() {
+    if (!currentStock) return;
+
+    const stock = currentStock;
+    const price = parseFloat(stock.price);
+
+    if (money < price) {
+        const buy = document.getElementById("BuyButton");
+        if (buy) buy.textContent = "Not enough funds";
+        return;
+    }
+
+    money -= price;
     sessionStorage.setItem("money", money);
     seeMoney();
 
-    for (let i=0; i<hold.length; i++) {
-        if (hold[i].name==stock.name) {
-            console.log(hold[i]);
-            hold[i]["amount"] = "" + (parseInt(hold[i]["amount"])+1);
-            console.log(hold[i]);
-            sessionStorage.setItem("bought", JSON.stringify(hold));
-            return;
+    let hold = JSON.parse(sessionStorage.getItem("bought")) || [];
+
+    // Check if we already own this stock
+    let found = false;
+    for (let i = 0; i < hold.length; i++) {
+        if (hold[i].symbol === stock.symbol) {
+            hold[i].amount = String((parseInt(hold[i].amount) || 0) + 1);
+            found = true;
+            break;
         }
     }
-    stock["amount"] = "1";
-    hold.push(stock);
+
+    if (!found) {
+        hold.push({
+            symbol: stock.symbol,
+            price: stock.price,
+            date: stock.date,
+            amount: "1"
+        });
+    }
+
     sessionStorage.setItem("bought", JSON.stringify(hold));
+    console.log("Updated bought list:", hold);
+
+    // ⭐ REFRESH OWNED STOCKS LIVE
+    renderOwnedStocks();
 }
 
+
+// Save stock to watchlist
 function saveStock() {
-    var stock = currentStock;
-    console.log(currentStock);
-    var hold = JSON.parse(sessionStorage.getItem("saved")) || [];
-    for (let i=0; i<hold.length; i++) {
-        if (hold[i].name == stock.name || stock=="") {
-            var button = document.getElementById("SaveButton");
-            button.textContent = "Already Saved";
+    if (!currentStock) return;
+
+    const stock = currentStock;
+    let saved = JSON.parse(sessionStorage.getItem("saved")) || [];
+
+    // Avoid duplicates
+    for (let i = 0; i < saved.length; i++) {
+        if (saved[i].symbol === stock.symbol) {
+            const btn = document.getElementById("SaveButton");
+            if (btn) btn.textContent = "Already Saved";
             return;
         }
     }
 
-    hold.push(stock);
+    saved.push({
+        symbol: stock.symbol,
+        price: stock.price,
+        date: stock.date
+    });
 
-    console.log(hold);
+    sessionStorage.setItem("saved", JSON.stringify(saved));
 
-    var button = document.getElementById("SaveButton");
-    button.textContent = "Saved Successfully";
-    button.onclick = null;
+    const btn = document.getElementById("SaveButton");
+    if (btn) {
+        btn.textContent = "Saved Successfully";
+        btn.onclick = null;
+    }
 
-    sessionStorage.setItem("saved", JSON.stringify(hold));
-    console.log(sessionStorage.getItem("saved"));
+    console.log("Saved list:", saved);
 }
 
-function seeMoney() {
-    const resultDiv = document.getElementById("seeMoney");
-    resultDiv.innerHTML = `<p>Amount of money left: ` + money;
-    return resultDiv.innerHTML;
+
+// ==============================
+// Render Saved + Owned Stocks
+// ==============================
+
+// Dashboard (index.html)
+function renderSavedOnDashboard() {
+    const container = document.getElementById("savedStocksContainer");
+    if (!container) return;
+
+    const saved = JSON.parse(sessionStorage.getItem("saved")) || [];
+
+    if (saved.length === 0) {
+        container.innerHTML = `<p>You don't have any saved stocks yet.</p>`;
+        return;
+    }
+
+    let html = "";
+    saved.forEach(s => {
+        html += `
+            <div class="stock-card">
+                <h3>${s.symbol}</h3>
+                <p><strong>Price:</strong> $${Number(s.price).toFixed(2)}</p>
+                <p>Date: ${s.date}</p>
+            </div>
+        `;
+    });
+
+    container.innerHTML = html;
 }
+
+
+// watchlist.html — OWNED stocks
+function renderOwnedStocks() {
+    const container = document.getElementById("ownedStocksContainer");
+    if (!container) return;
+
+    const owned = JSON.parse(sessionStorage.getItem("bought")) || [];
+
+    if (owned.length === 0) {
+        container.innerHTML = `<p>You don't own any stocks yet.</p>`;
+        return;
+    }
+
+    let html = "";
+    owned.forEach(s => {
+        html += `
+            <div class="stock-card">
+                <h3>${s.symbol}</h3>
+                <p><strong>Shares Owned:</strong> ${s.amount}</p>
+                <p><strong>Last Buy Price:</strong> $${Number(s.price).toFixed(2)}</p>
+                <p>Date: ${s.date}</p>
+            </div>
+        `;
+    });
+
+    container.innerHTML = html;
+}
+
+
+// Auto-render depending on page
+document.addEventListener("DOMContentLoaded", () => {
+    renderSavedOnDashboard();
+    renderOwnedStocks();
+});
