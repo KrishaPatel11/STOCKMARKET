@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Stocks</title>
-        <link rel="stylesheet" href="style.css">
-    </head>
-    <body>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Stocks</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
 
     <div class="sidebar">
         <h2 class="logo">My Stocks</h2>
@@ -14,13 +14,17 @@
         <a href="watchlist.html" class="active">Stocks</a>
     </div>
 
-    <div class="main-content" id="StockList">
+    <div class="main-content">
         <h1>My Stocks</h1>
 
-        <div class="result-box">
-            <button onclick="ownedStocks()"> See the stocks you own</button>
-        </div>
+        <h2>Saved Stocks</h2>
+        <div id="savedStocksContainer"></div>
+
+        <h2>Owned Stocks</h2>
+        <div id="ownedStocksContainer"></div>
     </div>
-    <script src="owned.js"></script>
-    </body>
+
+    <!-- IMPORTANT: Only script.js, no saved.js or owned.js anymore -->
+    <script src="script.js"></script>
+</body>
 </html>
